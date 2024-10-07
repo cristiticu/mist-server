@@ -1,0 +1,11 @@
+# Any compiled (pyc) files
+__pycache__/
+
+# User configuration
+.vscode/
+
+# Persistence options
+users.json
+
+# Environment variables
+*.env
