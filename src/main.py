@@ -37,28 +37,3 @@ def get_users():
 @app.get("/games/{game_id}")
 def get_user(game_id: str):
     return games_service.get(id=game_id)
-
-
-@app.get(path="/ADD")
-def tst():
-    return games_service.create(title="Added ",
-                                description="Woo", price=0, positive_reviews=0, negative_reviews=0)
-
-
-# @app.post("/users")
-# def create_user(create_user_request: CreateUserRequest):
-#     return users_service.create(email=create_user_request.email,
-#                                 password=create_user_request.password,
-#                                 first_name=create_user_request.first_name,
-#                                 last_name=create_user_request.last_name)
-
-
-# @app.patch("/users/{user_id}")
-# def update_user(user_id: str, patch_user_request: PatchUserRequest):
-#     return users_service.update(id=user_id,
-#                                 patch=patch_user_request)
-
-
-# @app.delete("/users/{user_id}")
-# def delete_user(user_id: str):
-#     users_service.delete(id=user_id)
