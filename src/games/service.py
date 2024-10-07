@@ -32,15 +32,5 @@ class GamesService():
 
         return game
 
-    # def update(self, *, id: str, patch: PatchUserRequest) -> Game:
-    #     user = self.get(id=id)
-
-    #     updated_user = User(
-    #         **{**user.model_dump(), **patch.model_dump(exclude_none=True)})
-
-    #     self._users.persist(entity=updated_user)
-
-    #     return updated_user
-
     def delete(self, *, id: str) -> None:
         self._games.delete(id=id)

@@ -10,17 +10,18 @@ T = TypeVar('T', bound=Entity)
 
 class FileRepository(Generic[T]):
     def __init__(self, *, filepath: str, persist_contents: bool = False, factory: Callable[[Dict], T]):
+        self._initial_state = None
         self._filepath = filepath
         self._factory = factory
         self._persist_contents = persist_contents
         self._lock = Lock()
 
-        if not persist_contents:
-            self._memory = self._read_from_file()
+    def initialize(self):
+        self._initial_state = self._read_from_file()
 
-    def __del__(self):
-        if not self._persist_contents and self._memory is not None:
-            self._write_to_file(self._memory)
+    def destroy(self):
+        if not self._persist_contents and self._initial_state is not None:
+            self._write_to_file(self._initial_state)
 
     def _write_to_file(self, list: list[T]) -> None:
         with open(self._filepath, mode='w', encoding='utf-8') as write:
