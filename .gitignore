@@ -5,7 +5,7 @@ __pycache__/
 .vscode/
 
 # Persistence options
-users.json
+games.json
 
 # Environment variables
 *.env

@@ -1,31 +1,32 @@
 import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+from games.persistence import GamesPersistence
+from games.service import GamesService
+
+load_dotenv('./.env')
 
 app = FastAPI(title='Mist')
 
-# USERS_FILEPATH = os.environ.get('USERS_FILEPATH')
+GAMES_FILEPATH = os.environ.get('GAMES_FILEPATH')
 
-# if USERS_FILEPATH is not None:
-#     users = UsersFileRepository(filepath=USERS_FILEPATH)
-#     users_service = UsersService(usersRepository=users)
-# else:
-#     print('Users storage file path not found!')
-#     exit(-1)
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+if GAMES_FILEPATH is not None:
+    games = GamesPersistence(filepath=GAMES_FILEPATH)
+    games_service = GamesService(games_persistence=games)
+else:
+    print('Games storage file path not found!')
+    exit(-1)
 
 
-# @app.get("/users")
-# def get_users():
-#     return users_service.get_users()
+@app.get("/games")
+def get_users():
+    return games_service.get_all()
 
 
-# @app.get("/users/{user_id}")
-# def get_user(user_id: str):
-#     return users_service.get(id=user_id)
+@app.get("/games/{game_id}")
+def get_user(game_id: str):
+    return games_service.get(id=game_id)
 
 
 # @app.post("/users")
