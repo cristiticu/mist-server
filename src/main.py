@@ -1,13 +1,12 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse
 
 from games.persistence import GamesPersistence
 from games.service import GamesService
 from settings import GAMES_FILEPATH, PERSIST_GAMES_JSON
-from utils.create_background_adder import create_background_adder
 
-print(PERSIST_GAMES_JSON)
+from utils.create_background_adder import create_background_adder
 
 if GAMES_FILEPATH is not None:
     games = GamesPersistence(filepath=GAMES_FILEPATH,
@@ -23,7 +22,9 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    stop_adder = create_background_adder(games_service)
+    (stop_adder, add_event) = create_background_adder(games_service)
+
+    app.state._add_event = add_event
 
     yield
 
@@ -48,7 +49,8 @@ async def notification_websocket(websocket: WebSocket):
     await websocket.accept()
 
     while True:
-        await websocket.receive_text()
+        await app.state._add_event.wait()
+        app.state._add_event.clear()
         await websocket.send_text("0xAA")
 
 html = """

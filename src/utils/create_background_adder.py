@@ -1,52 +1,43 @@
-from threading import Thread
-from asyncio import Event
+import threading
+import asyncio
 from time import sleep
 
 from games.service import GamesService
 
+_stop_event = threading.Event()
+_loop = asyncio.get_event_loop()
 
-def _background_adder(service: GamesService, stop_event: Event):
+
+def _background_adder(service: GamesService, _add_event: asyncio.Event):
     counter = 0
 
     sleep(20)
 
-    while not stop_event.is_set():
-        print('background adder adding')
-
+    while not _stop_event.is_set():
         service.create(title="Title " + str(counter),
                        description="empty", price=float(counter), positive_reviews=0, negative_reviews=0)
         counter += 1
 
-        print('background adder sleeping')
+        _loop.call_soon_threadsafe(_add_event.set)
 
         for _ in range(10):
-            if stop_event.is_set():
+            if _stop_event.is_set():
                 break
             sleep(2)
 
-    print('background adder is terminating')
-
 
 def create_background_adder(service: GamesService):
-    print('starting background adder')
+    event = asyncio.Event()
 
-    stop_event = Event()
-
-    thread = Thread(target=_background_adder, args=(service, stop_event))
+    thread = threading.Thread(target=_background_adder, args=(service, event))
     thread.start()
 
-    print('started background adder')
-
-    return lambda: _stop_background_adder(_thread=thread, _stop_event=stop_event)
+    return (lambda: _stop_background_adder(_thread=thread), event)
 
 
-def _stop_background_adder(*, _thread: Thread, _stop_event: Event):
-    print('stopping background adder')
-
+def _stop_background_adder(*, _thread: threading.Thread):
     _stop_event.set()
 
-    if _thread is not None and type(_thread) is Thread:
+    if _thread is not None and type(_thread) is threading.Thread:
         if _thread.is_alive():
             _thread.join()
-
-    print('stopped background adder')
