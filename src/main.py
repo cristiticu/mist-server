@@ -6,6 +6,7 @@ from games.persistence import GamesPersistence
 from games.service import GamesService
 from settings import GAMES_FILEPATH, PERSIST_GAMES_JSON
 
+from utils.background_runner import BackgroundRunner
 from utils.create_background_adder import create_background_adder
 
 if GAMES_FILEPATH is not None:
@@ -22,14 +23,20 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    (stop_adder, add_event) = create_background_adder(games_service)
+    background_add_task = BackgroundRunner(target=games_service.create,
+                                           args={"title": "Title ",
+                                                 "description": "empty",
+                                                 "price": 100,
+                                                 "positive_reviews": 0,
+                                                 "negative_reviews": 0},
+                                           sleep=20)
 
-    app.state._add_event = add_event
+    app.state.background_add_task = background_add_task
 
     yield
 
     games.destroy()
-    stop_adder()
+    background_add_task.stop()
 
 app = FastAPI(title='Mist', lifespan=lifespan)
 
@@ -49,8 +56,10 @@ async def notification_websocket(websocket: WebSocket):
     await websocket.accept()
 
     while True:
-        await app.state._add_event.wait()
-        app.state._add_event.clear()
+        await app.state.background_add_task.event.wait()
+
+        app.state.background_add_task.event.clear()
+
         await websocket.send_text("0xAA")
 
 html = """

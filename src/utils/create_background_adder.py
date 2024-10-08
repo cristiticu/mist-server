@@ -38,6 +38,5 @@ def create_background_adder(service: GamesService):
 def _stop_background_adder(*, _thread: threading.Thread):
     _stop_event.set()
 
-    if _thread is not None and type(_thread) is threading.Thread:
-        if _thread.is_alive():
-            _thread.join()
+    if _thread.is_alive():
+        _thread.join()
