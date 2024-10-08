@@ -1,13 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, WebSocket
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, WebSocket
 
 from games.persistence import GamesPersistence
 from games.service import GamesService
-from settings import GAMES_FILEPATH, PERSIST_GAMES_JSON
-
 from utils.background_runner import BackgroundRunner
-from utils.create_background_adder import create_background_adder
+
+from settings import GAMES_FILEPATH, PERSIST_GAMES_JSON
 
 if GAMES_FILEPATH is not None:
     games = GamesPersistence(filepath=GAMES_FILEPATH,
