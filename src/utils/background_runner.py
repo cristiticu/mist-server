@@ -5,13 +5,13 @@ from typing import Callable
 
 
 class BackgroundRunner():
-    def __init__(self, *, target: Callable, args: dict, sleep: int):
+    def __init__(self, *, target: Callable, args: dict, sleep: int, event: asyncio.Event | None = None):
         self._target = target
         self._args = args
         self._sleep = sleep
 
         self._stop_event = threading.Event()
-        self.event = asyncio.Event()
+        self.event = event
         self._loop = asyncio.get_event_loop()
 
         self._thread = threading.Thread(target=self._task)
@@ -24,7 +24,9 @@ class BackgroundRunner():
 
         while not self._stop_event.is_set():
             self._target(**self._args)
-            self._loop.call_soon_threadsafe(self.event.set)
+
+            if self.event:
+                self._loop.call_soon_threadsafe(self.event.set)
 
             for _ in range(10):
                 if self._stop_event.is_set():

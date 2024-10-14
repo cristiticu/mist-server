@@ -1,16 +1,18 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.websockets import WebSocketState
 
 from games.persistence import GamesPersistence
 from games.service import GamesService
 from utils.background_runner import BackgroundRunner
 
-from settings import GAMES_FILEPATH, PERSIST_GAMES_JSON
+import settings
+import asyncio
 
-if GAMES_FILEPATH is not None:
-    games = GamesPersistence(filepath=GAMES_FILEPATH,
-                             persist_contents=PERSIST_GAMES_JSON)
+if settings.GAMES_FILEPATH is not None:
+    games = GamesPersistence(filepath=settings.GAMES_FILEPATH,
+                             persist_contents=settings.PERSIST_GAMES_JSON)
 
     games.initialize()
 
@@ -22,20 +24,28 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    background_add_task = BackgroundRunner(target=games_service.create,
-                                           args={"title": "Title ",
-                                                 "description": "empty",
-                                                 "price": 100,
-                                                 "positive_reviews": 0,
-                                                 "negative_reviews": 0},
-                                           sleep=20)
+    background_add_task = None
+    client_notification_event = asyncio.Event()
+
+    if (settings.START_BACKGROUND_ADDER):
+        background_add_task = BackgroundRunner(target=games_service.create,
+                                               args={"title": "Title ",
+                                                     "description": "empty",
+                                                     "price": 100,
+                                                     "positive_reviews": 0,
+                                                     "negative_reviews": 0},
+                                               sleep=20,
+                                               event=client_notification_event)
 
     app.state.background_add_task = background_add_task
+    app.state.client_notification_event = client_notification_event
 
     yield
 
     games.destroy()
-    background_add_task.stop()
+
+    if (settings.START_BACKGROUND_ADDER and background_add_task is not None):
+        background_add_task.stop()
 
 app = FastAPI(title='Mist', lifespan=lifespan)
 
@@ -59,9 +69,9 @@ def get_user(game_id: str):
 async def notification_websocket(websocket: WebSocket):
     await websocket.accept()
 
-    while True:
-        await app.state.background_add_task.event.wait()
+    while True and websocket.state == WebSocketState.CONNECTED:
+        await app.state.client_notification_event.wait()
 
-        app.state.background_add_task.event.clear()
+        app.state.client_notification_event.clear()
 
         await websocket.send_text("0xAA")
