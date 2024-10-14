@@ -11,7 +11,7 @@ class BackgroundRunner():
         self._sleep = sleep
 
         self._stop_event = threading.Event()
-        self.event = event
+        self._event = event
         self._loop = asyncio.get_event_loop()
 
         self._thread = threading.Thread(target=self._task)
@@ -25,8 +25,8 @@ class BackgroundRunner():
         while not self._stop_event.is_set():
             self._target(**self._args)
 
-            if self.event:
-                self._loop.call_soon_threadsafe(self.event.set)
+            if self._event:
+                self._loop.call_soon_threadsafe(self._event.set)
 
             for _ in range(10):
                 if self._stop_event.is_set():
