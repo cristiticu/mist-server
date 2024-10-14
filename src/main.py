@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 
 from games.persistence import GamesPersistence
 from games.service import GamesService
@@ -37,6 +38,11 @@ async def lifespan(app: FastAPI):
     background_add_task.stop()
 
 app = FastAPI(title='Mist', lifespan=lifespan)
+
+app.add_middleware(CORSMiddleware,
+                   allow_origins=['*'],
+                   allow_methods=['GET', 'POST', 'DELETE', 'PATCH']
+                   )
 
 
 @app.get("/games")
