@@ -69,7 +69,7 @@ def get_user(game_id: str):
 async def notification_websocket(websocket: WebSocket):
     await websocket.accept()
 
-    while True and websocket.state == WebSocketState.CONNECTED:
+    while True:
         await app.state.client_notification_event.wait()
 
         app.state.client_notification_event.clear()
