@@ -1,14 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.websockets import WebSocketState
+import asyncio
 
-from games.persistence import GamesPersistence
-from games.service import GamesService
-from utils.background_runner import BackgroundRunner
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.websockets import WebSocket, WebSocketState
 
 import settings
-import asyncio
+import shared.utils as utils
+from games.persistence import GamesPersistence
+from games.service import GamesService
+from shared.background_runner import BackgroundRunner
 
 if settings.GAMES_FILEPATH is not None:
     games = GamesPersistence(filepath=settings.GAMES_FILEPATH,
@@ -70,8 +71,13 @@ async def notification_websocket(websocket: WebSocket):
     await websocket.accept()
 
     while True:
-        await app.state.client_notification_event.wait()
+        try:
+            await asyncio.wait_for(app.state.client_notification_event.wait(), 10)
 
-        app.state.client_notification_event.clear()
+            app.state.client_notification_event.clear()
 
-        await websocket.send_text("0xAA")
+            await websocket.send_json({"type": "notification"})
+        except TimeoutError:
+            active = await utils.is_websocket_active(websocket)
+            if not active:
+                break
