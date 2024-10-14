@@ -9,3 +9,4 @@ class Game(Entity):
     added_at: date
     positive_reviews: int
     negative_reviews: int
+    image_src: str | None = None
