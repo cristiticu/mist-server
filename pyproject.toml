@@ -3,7 +3,7 @@ name = "mist-server"
 version = "0.1.0"
 description = ""
 authors = ["Cristian Ticu <cristian.ticu@eggnita.com>"]
-readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
