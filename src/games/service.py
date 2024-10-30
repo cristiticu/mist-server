@@ -8,17 +8,20 @@ class GamesService():
     def __init__(self, *, games_persistence: GamesPersistence):
         self._games = games_persistence
 
-    def get_all(self) -> list[Game]:
+    def get_all(self):
         return self._games.read_all()
 
-    def get(self, *, id: str) -> Game:
+    def get_many(self, *, ids: list[str]):
+        return self._games.read_many(ids=ids)
+
+    def get(self, *, id: str):
         return self._games.read(id=id)
 
     def create(self, *, title: str,
                description: str,
                price: float,
                positive_reviews: int,
-               negative_reviews: int) -> Game:
+               negative_reviews: int):
 
         game = Game(id=str(uuid4()),
                     title=title,
@@ -32,5 +35,5 @@ class GamesService():
 
         return game
 
-    def delete(self, *, id: str) -> None:
+    def delete(self, *, id: str):
         self._games.delete(id=id)

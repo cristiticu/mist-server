@@ -9,6 +9,8 @@ package-mode = false
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.115.0"}
 python-dotenv = "^1.0.1"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pyjwt = "^2.9.0"
 
 
 [build-system]

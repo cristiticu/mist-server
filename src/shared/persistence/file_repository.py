@@ -46,20 +46,26 @@ class FileRepository(Generic[T]):
     def read_all(self) -> list[T]:
         return self._read_from_file()
 
-    def read(self, *, id: str) -> T:
+    def read(self, *, id: str) -> T | None:
         entities = self._read_from_file()
 
         entity = [_entity for _entity in entities if _entity.id == id]
 
-        if len(entity) == 1:
-            return entity[0]
-        else:
-            raise Exception('Entity not found')
+        if len(entity) == 0:
+            return None
+
+        return entity[0]
+
+    def read_many(self, *, ids: list[str]) -> list[T]:
+        entities = self._read_from_file()
+
+        return [entity for entity in entities if entity.id in ids]
 
     def delete(self, *, id: str) -> None:
         with self._lock:
             entities = self._read_from_file()
             entity = self.read(id=id)
 
-            entities.remove(entity)
-            self._write_to_file(entities)
+            if entity is not None:
+                entities.remove(entity)
+                self._write_to_file(entities)

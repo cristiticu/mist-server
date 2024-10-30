@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta, timezone
 from fastapi.websockets import WebSocketState, WebSocket
+import jwt
 import asyncio
+import settings
 
 
 async def is_websocket_active(websocket: WebSocket) -> bool:
@@ -12,3 +15,15 @@ async def is_websocket_active(websocket: WebSocket) -> bool:
     except BaseException:
         return False
     return True
+
+
+def create_access_token(data: dict, expire_delta: timedelta):
+    encode = data.copy()
+    expire = datetime.now(timezone.utc) + expire_delta
+    encode.update({"exp": expire})
+
+    return jwt.encode(encode, settings.SECRET_KEY, settings.ALGORITHM)
+
+
+def decode_access_token(token: str):
+    return jwt.decode(token, settings.SECRET_KEY, [settings.ALGORITHM])
