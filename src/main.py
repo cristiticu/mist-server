@@ -47,7 +47,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=['*'],
-                   allow_methods=['GET', 'POST', 'DELETE', 'PATCH']
+                   allow_methods=['GET', 'POST', 'DELETE', 'PATCH'],
+                   allow_credentials=True,
+                   allow_headers=['*']
                    )
 
 
