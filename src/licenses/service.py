@@ -1,3 +1,5 @@
+from datetime import date
+from uuid import uuid4
 from licenses.model import License
 from licenses.persistence import LicensesPersistence
 
@@ -9,8 +11,16 @@ class LicensesService():
     def get_all(self) -> list[License]:
         return self._licenses.read_all()
 
-    def get(self, *, id: str) -> License:
+    def get(self, *, id: str):
         return self._licenses.read(id=id)
 
-    def get_all_for_user(self, *, user_id: str) -> list[License]:
+    def get_all_for_user(self, *, user_id: str):
         return [license for license in self._licenses.read_all() if license.user_id == user_id]
+
+    def create(self, *, game_id: str, user_id: str):
+        license = License(id=str(uuid4()), user_id=user_id,
+                          game_id=game_id, acquisition=date.today())
+
+        self._licenses.persist(entity=license)
+
+        return license

@@ -119,6 +119,26 @@ def get_user_games(token: Annotated[str, Depends(oauth2_scheme)]):
     return application_context.games.get_many(ids=games_ids)
 
 
+@app.post("/user/add-game")
+def add_user_game(game_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = utils.decode_access_token(token)
+        user_id = payload.get("id")
+
+        if user_id is None:
+            raise credentials_exception
+    except InvalidTokenError:
+        raise credentials_exception
+
+    return application_context.licenses.create(game_id=game_id, user_id=user_id)
+
+
 @app.websocket(path="/notification/games")
 async def ws_games_notification(websocket: WebSocket):
     await websocket.accept()
