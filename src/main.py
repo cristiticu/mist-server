@@ -77,8 +77,8 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends(OAuth2Pa
 
 
 @app.get("/games")
-def get_all_games():
-    return application_context.games.get_all()
+def get_games(limit: int, offset: int):
+    return application_context.games.get_page(limit=limit, offset=offset)
 
 
 @app.get("/games/{game_id}")

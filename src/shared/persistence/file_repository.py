@@ -46,6 +46,16 @@ class FileRepository(Generic[T]):
     def read_all(self) -> list[T]:
         return self._read_from_file()
 
+    def read_page(self, *, limit: int, offset: int):
+        entities = self._read_from_file()
+
+        return [entity for index, entity in enumerate(entities) if index >= offset and index - offset < limit]
+
+    def read_many(self, *, ids: list[str]) -> list[T]:
+        entities = self._read_from_file()
+
+        return [entity for entity in entities if entity.id in ids]
+
     def read(self, *, id: str) -> T | None:
         entities = self._read_from_file()
 
@@ -55,11 +65,6 @@ class FileRepository(Generic[T]):
             return None
 
         return entity[0]
-
-    def read_many(self, *, ids: list[str]) -> list[T]:
-        entities = self._read_from_file()
-
-        return [entity for entity in entities if entity.id in ids]
 
     def delete(self, *, id: str) -> None:
         with self._lock:

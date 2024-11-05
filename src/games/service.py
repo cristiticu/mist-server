@@ -14,6 +14,9 @@ class GamesService():
     def get_many(self, *, ids: list[str]):
         return self._games.read_many(ids=ids)
 
+    def get_page(self, *, limit: int, offset: int):
+        return self._games.read_page(limit=limit, offset=offset)
+
     def get(self, *, id: str):
         return self._games.read(id=id)
 
