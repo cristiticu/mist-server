@@ -18,7 +18,7 @@ def list_licenses(user: Annotated[UserTokenData, Depends(user_token_data)]):
 
 
 @router.post("")
-def create_user_license(game_id: str, user: Annotated[UserTokenData, Depends(user_token_data)]):
+def create_license(game_id: str, user: Annotated[UserTokenData, Depends(user_token_data)]):
     return application_context.licenses.create(game_id=game_id, user_id=user.id)
 
 
