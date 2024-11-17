@@ -1,18 +1,19 @@
 from contextlib import asynccontextmanager
 import asyncio
-from datetime import timedelta
-from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.websockets import WebSocket
-from jwt import InvalidTokenError
+from fastapi.responses import JSONResponse
 
-from context import ApplicationContext
-import settings
-import shared.utils as utils
 from shared.background_runner import BackgroundRunner
+from context import ApplicationContext
+from exceptions import register_error_handlers
+import settings
+
+from routers.games import router as games_router
+from routers.users import router as users_router
+from routers.websocket import router as websocket_router
+from routers.licenses import router as licenses_router
 
 application_context = ApplicationContext()
 
@@ -43,7 +44,6 @@ async def lifespan(app: FastAPI):
         background_add_task.stop()
 
 app = FastAPI(title='Mist', lifespan=lifespan)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=['*'],
@@ -53,104 +53,14 @@ app.add_middleware(CORSMiddleware,
                    )
 
 
-# Public Routes
+@app.get("/", tags=["root"])
+def _():
+    return JSONResponse(status_code=200, content={"message": "It's Alive!"})
 
 
-@app.post("/auth/login")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends(OAuth2PasswordRequestForm)]):
-    user = application_context.users.get_by_credentials(
-        username=form_data.username, password=form_data.password)
+app.include_router(games_router)
+app.include_router(users_router)
+app.include_router(websocket_router)
+app.include_router(licenses_router)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = utils.create_access_token({"id": user.id}, timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-
-    return {
-        "access_token": token, "token_type": "bearer"
-    }
-
-
-@app.get("/games")
-def get_games(limit: int, offset: int):
-    return application_context.games.get_page(limit=limit, offset=offset)
-
-
-@app.get("/games/{game_id}")
-def get_game(game_id: str):
-    game = application_context.games.get(id=game_id)
-
-    if not game:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Game not found"
-        )
-
-    return game
-
-# Private Routes
-
-
-@app.get("/user/my-games")
-def get_user_games(token: Annotated[str, Depends(oauth2_scheme)]):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = utils.decode_access_token(token)
-        user_id = payload.get("id")
-
-        if user_id is None:
-            raise credentials_exception
-    except InvalidTokenError:
-        raise credentials_exception
-
-    licenses = application_context.licenses.get_all_for_user(user_id=user_id)
-    games_ids = [license.game_id for license in licenses]
-
-    return application_context.games.get_many(ids=games_ids)
-
-
-@app.post("/user/add-game")
-def add_user_game(game_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = utils.decode_access_token(token)
-        user_id = payload.get("id")
-
-        if user_id is None:
-            raise credentials_exception
-    except InvalidTokenError:
-        raise credentials_exception
-
-    return application_context.licenses.create(game_id=game_id, user_id=user_id)
-
-
-@app.websocket(path="/notification/games")
-async def ws_games_notification(websocket: WebSocket):
-    await websocket.accept()
-
-    while True:
-        try:
-            await asyncio.wait_for(app.state.client_notification_event.wait(), 10)
-
-            app.state.client_notification_event.clear()
-
-            await websocket.send_json({"type": "notification"})
-        except TimeoutError:
-            active = await utils.is_websocket_active(websocket)
-            if not active:
-                break
+register_error_handlers(app)

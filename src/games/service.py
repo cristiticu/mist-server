@@ -1,5 +1,6 @@
 from datetime import date
 from uuid import uuid4
+from games.exceptions import GameNotFound
 from games.model import Game
 from games.persistence import GamesPersistence
 
@@ -18,7 +19,12 @@ class GamesService():
         return self._games.read_page(limit=limit, offset=offset)
 
     def get(self, *, id: str):
-        return self._games.read(id=id)
+        game = self._games.read(id=id)
+
+        if game is None:
+            raise GameNotFound()
+
+        return game
 
     def create(self, *, title: str,
                description: str,

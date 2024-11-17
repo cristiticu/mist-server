@@ -1,4 +1,3 @@
-from threading import Lock
 from typing import Callable, Dict, TypeVar, Generic
 from fastapi.encoders import jsonable_encoder
 import json
@@ -14,7 +13,6 @@ class FileRepository(Generic[T]):
         self._filepath = filepath
         self._factory = factory
         self._persist_contents = persist_contents
-        self._lock = Lock()
 
     def initialize(self):
         self._initial_state = self._read_from_file()
@@ -32,16 +30,15 @@ class FileRepository(Generic[T]):
             return json.load(read, object_hook=self._factory)
 
     def persist(self, *, entity: T) -> None:
-        with self._lock:
-            entities = self._read_from_file()
+        entities = self._read_from_file()
 
-            try:
-                index = entities.index(entity)
-                entities[index] = entity
-            except ValueError:
-                entities.append(entity)
+        try:
+            index = entities.index(entity)
+            entities[index] = entity
+        except ValueError:
+            entities.append(entity)
 
-            self._write_to_file(entities)
+        self._write_to_file(entities)
 
     def read_all(self) -> list[T]:
         return self._read_from_file()
@@ -67,10 +64,9 @@ class FileRepository(Generic[T]):
         return entity[0]
 
     def delete(self, *, id: str) -> None:
-        with self._lock:
-            entities = self._read_from_file()
-            entity = self.read(id=id)
+        entities = self._read_from_file()
+        entity = self.read(id=id)
 
-            if entity is not None:
-                entities.remove(entity)
-                self._write_to_file(entities)
+        if entity is not None:
+            entities.remove(entity)
+            self._write_to_file(entities)

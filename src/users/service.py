@@ -1,3 +1,5 @@
+from exceptions import CredentialsException
+from users.exceptions import UserNotFound
 from users.model import User
 from users.persistence import UsersPersistence
 from passlib.context import CryptContext
@@ -12,7 +14,12 @@ class UsersService():
         return self._users.read_all()
 
     def get(self, *, id: str):
-        return self._users.read(id=id)
+        user = self._users.read(id=id)
+
+        if user is None:
+            raise UserNotFound()
+
+        return user
 
     def get_by_credentials(self, *, username: str, password: str):
         users = self._users.read_all()
@@ -21,6 +28,6 @@ class UsersService():
                 username and self._pwd_context.verify(password, _user.password)]
 
         if len(user) == 0:
-            return None
+            raise CredentialsException()
 
         return user[0]

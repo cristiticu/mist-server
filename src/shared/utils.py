@@ -17,10 +17,11 @@ async def is_websocket_active(websocket: WebSocket) -> bool:
     return True
 
 
-def create_access_token(data: dict, expire_delta: timedelta):
+def create_access_token(data: dict, expire=settings.ACCESS_TOKEN_EXPIRE_MINUTES):
+    expire_delta = timedelta(expire)
     encode = data.copy()
-    expire = datetime.now(timezone.utc) + expire_delta
-    encode.update({"exp": expire})
+    expires_at = datetime.now(timezone.utc) + expire_delta
+    encode.update({"exp": expires_at})
 
     return jwt.encode(encode, settings.SECRET_KEY, settings.ALGORITHM)
 
