@@ -7,3 +7,4 @@ class License(Entity):
     game_id: str
     acquisition: date
     expires: date | None = None
+    custom_image_src: str | None = None
