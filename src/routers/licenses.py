@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from games.model import Game
+from licenses.model import LicensePatch
 from users.dependencies import user_token_data
 from users.model import UserTokenData
 
@@ -22,7 +23,20 @@ def create_license(game_id: str, user: Annotated[UserTokenData, Depends(user_tok
     return application_context.licenses.create(game_id=game_id, user_id=user.id)
 
 
-@router.get("/owned-games")
+@router.get("/{game_id}")
+def get_license_for_game(game_id: str, user: Annotated[UserTokenData, Depends(user_token_data)]):
+    return application_context.licenses.get_by_data(user_id=user.id, game_id=game_id)
+
+
+@router.patch("/{game_id}")
+def update_license(game_id: str, license_patch: LicensePatch, user: Annotated[UserTokenData, Depends(user_token_data)]):
+    license = application_context.licenses.get_by_data(
+        user_id=user.id, game_id=game_id)
+
+    return application_context.licenses.update(id=license.id, patch=license_patch)
+
+
+@router.get("/aggregate/owned-games")
 def list_owned_games(user: Annotated[UserTokenData, Depends(user_token_data)]):
     licenses = application_context.licenses.get_all_for_user(
         user_id=user.id)

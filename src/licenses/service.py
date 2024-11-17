@@ -1,6 +1,7 @@
 from datetime import date
 from uuid import uuid4
-from licenses.model import License
+from licenses.exceptions import LicenseNotFound
+from licenses.model import License, LicensePatch
 from licenses.persistence import LicensesPersistence
 
 
@@ -12,7 +13,23 @@ class LicensesService():
         return self._licenses.read_all()
 
     def get(self, *, id: str):
-        return self._licenses.read(id=id)
+        license = self._licenses.read(id=id)
+
+        if license is None:
+            raise LicenseNotFound()
+
+        return license
+
+    def get_by_data(self, *, user_id: str, game_id: str):
+        licenses = self._licenses.read_all()
+
+        license = [_license for _license in licenses if _license.game_id ==
+                   game_id and _license.user_id == user_id]
+
+        if len(license) == 0:
+            raise LicenseNotFound()
+
+        return license[0]
 
     def get_all_for_user(self, *, user_id: str):
         return [license for license in self._licenses.read_all() if license.user_id == user_id]
@@ -32,3 +49,16 @@ class LicensesService():
         self._licenses.persist(entity=license)
 
         return license
+
+    def update(self, *, id: str, patch: LicensePatch):
+        license = self._licenses.read(id=id)
+
+        if license is None:
+            raise LicenseNotFound()
+
+        updated_license = License(
+            **{**license.model_dump(exclude_none=True), **patch.model_dump()})
+
+        self._licenses.persist(entity=updated_license)
+
+        return updated_license
