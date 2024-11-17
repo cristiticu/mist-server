@@ -7,7 +7,7 @@ router = APIRouter(prefix="/game", tags=["game"])
 application_context = ApplicationContext()
 
 
-@router.get("/")
+@router.get("")
 def list_games(limit: int, offset: int):
     return application_context.games.get_page(limit=limit, offset=offset)
 

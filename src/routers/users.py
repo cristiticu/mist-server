@@ -24,7 +24,7 @@ async def authenticate(form_data: Annotated[OAuth2PasswordRequestForm, Depends(O
                         )
 
 
-@router.get("/")
+@router.get("")
 def list_users(_: Annotated[UserTokenData, Depends(user_token_data)]):
     return application_context.users.get_all()
 
