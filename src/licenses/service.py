@@ -57,7 +57,7 @@ class LicensesService():
             raise LicenseNotFound()
 
         updated_license = License(
-            **{**license.model_dump(exclude_none=True), **patch.model_dump()})
+            **{**license.model_dump(), **patch.model_dump()})
 
         self._licenses.persist(entity=updated_license)
 
