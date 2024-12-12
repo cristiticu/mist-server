@@ -8,8 +8,14 @@ application_context = ApplicationContext()
 
 
 @router.get("")
-def list_games(limit: int, offset: int):
-    return application_context.games.get_page(limit=limit, offset=offset)
+def list_games(offset: int | None = None, limit: int | None = None):
+    if not limit:
+        return application_context.games.get_all()
+
+    if not offset:
+        offset = 0
+
+    return application_context.games.get_page(offset=offset, limit=limit)
 
 
 @router.get("/{game_id}")
