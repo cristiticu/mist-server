@@ -12,6 +12,7 @@ MessageType = Literal["generic", "login", "game_added"]
 
 @dataclass
 class AuthWebsocket:
+    id: str
     websocket: WebSocket
     user_token: UserTokenData
 

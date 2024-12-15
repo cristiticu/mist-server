@@ -17,17 +17,17 @@ notifications_manager = NotificationsManager()
 
 
 @router.websocket(path="/notification/game")
-async def ws_games_notification(auth_connection: Annotated[AuthWebsocket, Depends(connected_auth_websocket)]):
-    notifications_manager.subscribe(auth_connection.user_token, "games")
+async def ws_games_notification(connection: Annotated[AuthWebsocket, Depends(connected_auth_websocket)]):
+    notifications_manager.subscribe(connection.id, "games")
 
     try:
         while True:
-            await auth_connection.websocket.receive_json()
+            await connection.websocket.receive_json()
     except WebSocketDisconnect:
-        notifications_manager.withdraw_all(auth_connection.user_token)
-        connection_manager.disconnect(auth_connection.user_token)
+        notifications_manager.withdraw_all(connection.id)
+        connection_manager.disconnect(connection.id)
 
-        user = application_context.users.get(id=auth_connection.user_token.id)
+        user = application_context.users.get(id=connection.user_token.id)
 
         message_body = MessageBody(type="login",
                                    data=f"User {user.username} is offline")

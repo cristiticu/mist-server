@@ -22,7 +22,7 @@ async def websocket_notifications_lifespan(app: FastAPI):
                 "description": "empty",
                 "price": 100,
                 "positive_reviews": 0,
-                "negative_reviews": 0
+                "negative_reviews": 0,
                 }
         _notman_test_producer = asyncio.create_task(
             notifications_manager._produce_messages(channel="games", type="game_added", factory=application_context.games.create, kwargs=args))

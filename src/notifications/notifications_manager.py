@@ -2,8 +2,6 @@ import asyncio
 from typing import Callable
 from notifications.connection_manager import ConnectionManager
 from notifications.model import Channel, MessageType, Message, MessageBody
-from users.model import UserTokenData
-
 
 connection_manager = ConnectionManager()
 
@@ -19,25 +17,25 @@ class NotificationsManager():
         return cls.instance
 
     def __init__(self):
-        self.subscriptions: dict[Channel, set[UserTokenData]] = dict()
+        self.subscriptions: dict[Channel, set[str]] = dict()
         self.message_queue: asyncio.Queue[Message] = asyncio.Queue()
 
-    def subscribe(self, user_token: UserTokenData, channel: Channel):
+    def subscribe(self, connection_id: str, channel: Channel):
         if "all" not in self.subscriptions:
             self.subscriptions["all"] = set()
-        self.subscriptions["all"].add(user_token)
+        self.subscriptions["all"].add(connection_id)
 
         if channel not in self.subscriptions:
             self.subscriptions[channel] = set()
-        self.subscriptions[channel].add(user_token)
+        self.subscriptions[channel].add(connection_id)
 
-    def withdraw(self, user_token: UserTokenData, channel: Channel):
-        self.subscriptions["all"].discard(user_token)
-        self.subscriptions[channel].discard(user_token)
+    def withdraw(self, connection_id: str, channel: Channel):
+        self.subscriptions["all"].discard(connection_id)
+        self.subscriptions[channel].discard(connection_id)
 
-    def withdraw_all(self, user_token: UserTokenData):
+    def withdraw_all(self, connection_id: str):
         for channel in self.subscriptions.keys():
-            self.subscriptions[channel].discard(user_token)
+            self.subscriptions[channel].discard(connection_id)
 
     async def push_message(self, message: Message):
         await self.message_queue.put(message)
@@ -49,8 +47,8 @@ class NotificationsManager():
             if len(self.subscriptions) > 0:
                 if message.channel in self.subscriptions:
                     subscribed_connections = self.subscriptions[message.channel]
-                    for token in subscribed_connections:
-                        await connection_manager.send(message.body, token)
+                    for connection_id in subscribed_connections:
+                        await connection_manager.send(message.body, connection_id)
                 else:
                     print(f"Warn: notifications manager got a message for inexistent channel \
                           {message.channel}")
