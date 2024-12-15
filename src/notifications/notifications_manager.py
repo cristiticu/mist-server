@@ -1,7 +1,7 @@
 import asyncio
-from typing import Any
+from typing import Callable
 from notifications.connection_manager import ConnectionManager
-from notifications.model import Channel, Message, MessageBody
+from notifications.model import Channel, MessageType, Message, MessageBody
 from users.model import UserTokenData
 
 
@@ -65,4 +65,12 @@ class NotificationsManager():
 
             await self.message_queue.put(Message(channel="all", body=MessageBody(type="generic", data=body)))
             await asyncio.sleep(sleep_for)
+            index += 1
+
+    async def _produce_messages(self, *, channel: Channel, type: MessageType, factory: Callable, kwargs: dict, sleep_for: int = 20):
+        index = 1
+        while True:
+            await asyncio.sleep(sleep_for)
+            message = factory(**kwargs)
+            await self.message_queue.put(Message(channel=channel, body=MessageBody(type=type, data=message)))
             index += 1
