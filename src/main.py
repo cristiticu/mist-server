@@ -1,14 +1,10 @@
-from contextlib import asynccontextmanager
-import asyncio
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from shared.background_runner import BackgroundRunner
 from context import ApplicationContext
 from exceptions import register_error_handlers
-import settings
+from lifespan import websocket_notifications_lifespan
 
 from routers.games import router as games_router
 from routers.users import router as users_router
@@ -17,33 +13,7 @@ from routers.licenses import router as licenses_router
 
 application_context = ApplicationContext()
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    background_add_task = None
-    client_notification_event = asyncio.Event()
-
-    if (settings.START_BACKGROUND_ADDER):
-        background_add_task = BackgroundRunner(target=application_context.games.create,
-                                               args={"title": "Title ",
-                                                     "description": "empty",
-                                                     "price": 100,
-                                                     "positive_reviews": 0,
-                                                     "negative_reviews": 0},
-                                               sleep=20,
-                                               event=client_notification_event)
-
-    app.state.background_add_task = background_add_task
-    app.state.client_notification_event = client_notification_event
-
-    yield
-
-    application_context.destroy()
-
-    if (settings.START_BACKGROUND_ADDER and background_add_task is not None):
-        background_add_task.stop()
-
-app = FastAPI(title='Mist', lifespan=lifespan)
+app = FastAPI(title='Mist', lifespan=websocket_notifications_lifespan)
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=['*'],

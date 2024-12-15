@@ -26,18 +26,17 @@ class ApplicationContext():
 
         self._games_persistence = GamesPersistence(filepath=settings.GAMES_FILEPATH,
                                                    persist_contents=settings.PERSIST_GAMES_JSON)
-        self._games_persistence.initialize()
         self.games = GamesService(
             games_persistence=self._games_persistence)
 
         self._users_persistence = UsersPersistence(
             filepath=settings.USERS_FILEPATH, persist_contents=settings.PERSIST_USERS_JSON)
-        self._users_persistence.initialize()
+
         self.users = UsersService(users_persistence=self._users_persistence)
 
         self._licenses_persistence = LicensesPersistence(filepath=settings.LICENSES_FILEPATH,
                                                          persist_contents=settings.PERSIST_LICENSES_JSON)
-        self._licenses_persistence.initialize()
+
         self.licenses = LicensesService(
             licenses_persistence=self._licenses_persistence)
 

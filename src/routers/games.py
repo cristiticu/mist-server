@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from context import ApplicationContext
-from games.exceptions import GameNotFound
 
 
 router = APIRouter(prefix="/game", tags=["game"])
