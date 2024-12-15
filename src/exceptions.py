@@ -17,7 +17,7 @@ class CredentialsException(Error):
         '''Custom exception for invalid JWT Credentials'''
 
         super(CredentialsException, self).__init__(
-            msg=msg or "Could not validate credentials",
+            msg=msg or "Invalid credentials",
             error_trace=error_trace,
         )
 

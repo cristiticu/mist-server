@@ -48,8 +48,8 @@ class NotificationsManager():
             if len(self.subscriptions) > 0:
                 if message.channel in self.subscriptions:
                     subscribed_connections = self.subscriptions[message.channel]
-                    for connection in subscribed_connections:
-                        await connection_manager.send(message.body, connection)
+                    for user_id in subscribed_connections:
+                        await connection_manager.send(message.body, user_id)
                 else:
                     print(f"Warn: notifications manager got a message for inexistent channel \
                           {message.channel}")

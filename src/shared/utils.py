@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta, timezone
-from fastapi.websockets import WebSocketState, WebSocket
 import jwt
 import asyncio
+from datetime import datetime, timedelta, timezone
+
+from fastapi.websockets import WebSocketState, WebSocket
+
 import settings
 
 
@@ -17,8 +19,8 @@ async def is_websocket_active(websocket: WebSocket) -> bool:
     return True
 
 
-def create_access_token(data: dict, expire=settings.ACCESS_TOKEN_EXPIRE_MINUTES):
-    expire_delta = timedelta(expire)
+def create_access_token(data: dict, expire: int = settings.ACCESS_TOKEN_EXPIRE_MINUTES):
+    expire_delta = timedelta(minutes=expire)
     encode = data.copy()
     expires_at = datetime.now(timezone.utc) + expire_delta
     encode.update({"exp": expires_at})

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from jwt import InvalidTokenError
+from jwt import InvalidTokenError, ExpiredSignatureError
 
 from users.model import UserTokenData
 from exceptions import CredentialsException
@@ -19,8 +19,11 @@ def user_token_data(token: Annotated[str, Depends(oauth2_scheme)]) -> UserTokenD
 
         if user_id is None:
             raise CredentialsException()
+
+    except ExpiredSignatureError:
+        raise CredentialsException(msg="Expired signature")
     except InvalidTokenError:
-        raise CredentialsException()
+        raise CredentialsException(msg="Corrupt signature")
 
     return UserTokenData(id=user_id)
 
@@ -32,7 +35,10 @@ def user_token_query(token: str) -> UserTokenData:
 
         if user_id is None:
             raise CredentialsException()
+
+    except ExpiredSignatureError:
+        raise CredentialsException(msg="Expired signature")
     except InvalidTokenError:
-        raise CredentialsException()
+        raise CredentialsException(msg="Corrupt signature")
 
     return UserTokenData(id=user_id)
