@@ -11,5 +11,6 @@ class User(Entity):
     profile_img: str | None = None
 
 
-class UserTokenData(BaseModel):
+class UserTokenData(BaseModel, frozen=True):
+    raw_token: str
     id: str

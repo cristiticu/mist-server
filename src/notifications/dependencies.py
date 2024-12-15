@@ -13,6 +13,6 @@ connection_manager = ConnectionManager()
 async def connected_auth_websocket(websocket: WebSocket, token: Annotated[UserTokenData, Depends(user_token_query)]):
     await websocket.accept()
 
-    connection_manager.connect(token.id, websocket)
+    connection_manager.connect(token, websocket)
 
-    return AuthWebsocket(websocket=websocket, user_id=token.id)
+    return AuthWebsocket(websocket=websocket, user_token=token)

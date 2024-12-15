@@ -1,8 +1,11 @@
 from exceptions import CredentialsException
+from notifications.model import Message, MessageBody
+from notifications.notifications_manager import NotificationsManager
 from users.exceptions import UserNotFound
-from users.model import User
 from users.persistence import UsersPersistence
 from passlib.context import CryptContext
+
+notifications_manager = NotificationsManager()
 
 
 class UsersService():
@@ -21,7 +24,7 @@ class UsersService():
 
         return user
 
-    def get_by_credentials(self, *, username: str, password: str):
+    async def get_by_credentials(self, *, username: str, password: str):
         users = self._users.read_all()
 
         user = [_user for _user in users if _user.username ==
@@ -29,5 +32,9 @@ class UsersService():
 
         if len(user) == 0:
             raise CredentialsException()
+
+        message_body = MessageBody(type="login",
+                                   data=f"User {username} is online")
+        await notifications_manager.push_message(Message(body=message_body))
 
         return user[0]

@@ -25,7 +25,7 @@ def user_token_data(token: Annotated[str, Depends(oauth2_scheme)]) -> UserTokenD
     except InvalidTokenError:
         raise CredentialsException(msg="Corrupt signature")
 
-    return UserTokenData(id=user_id)
+    return UserTokenData(raw_token=token, id=user_id)
 
 
 def user_token_query(token: str) -> UserTokenData:
@@ -41,4 +41,4 @@ def user_token_query(token: str) -> UserTokenData:
     except InvalidTokenError:
         raise CredentialsException(msg="Corrupt signature")
 
-    return UserTokenData(id=user_id)
+    return UserTokenData(raw_token=token, id=user_id)
