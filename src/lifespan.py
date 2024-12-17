@@ -18,8 +18,8 @@ async def websocket_notifications_lifespan(app: FastAPI):
     _notman_test_producer = None
 
     if settings.START_BACKGROUND_ADDER:
-        args = {"title": "Title ",
-                "description": "empty",
+        args = {"title": "Websocket Game {arg}",
+                "description": "new description {arg}",
                 "price": 100,
                 "positive_reviews": 0,
                 "negative_reviews": 0,

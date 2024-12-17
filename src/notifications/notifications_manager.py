@@ -69,6 +69,12 @@ class NotificationsManager():
         index = 1
         while True:
             await asyncio.sleep(sleep_for)
+
+            for arg in kwargs:
+                value = kwargs[arg]
+                if isinstance(value, str):
+                    kwargs[arg] = value.replace("{arg}", str(index))
+
             message = factory(**kwargs)
             await self.message_queue.put(Message(channel=channel, body=MessageBody(type=type, data=message)))
             index += 1
