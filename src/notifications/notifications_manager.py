@@ -45,6 +45,8 @@ class NotificationsManager():
             message = await self.message_queue.get()
 
             if len(self.subscriptions) > 0:
+                print("Sending notification to subscribers")
+
                 if message.channel in self.subscriptions:
                     subscribed_connections = self.subscriptions[message.channel]
                     for connection_id in subscribed_connections:
@@ -70,11 +72,14 @@ class NotificationsManager():
         while True:
             await asyncio.sleep(sleep_for)
 
-            for arg in kwargs:
-                value = kwargs[arg]
-                if isinstance(value, str):
-                    kwargs[arg] = value.replace("{arg}", str(index))
+            modified_kwargs = kwargs.copy()
 
-            message = factory(**kwargs)
+            for arg in modified_kwargs:
+                value = modified_kwargs[arg]
+                if isinstance(value, str):
+                    modified_kwargs[arg] = value.replace("{arg}", str(index))
+
+            message = factory(**modified_kwargs)
+
             await self.message_queue.put(Message(channel=channel, body=MessageBody(type=type, data=message)))
             index += 1
